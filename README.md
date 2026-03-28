@@ -19,11 +19,11 @@ Este proyecto integra una celda de manufactura simulada con estos componentes:
 2. Docker Compose v2 disponible.
 3. CoppeliaSim instalado localmente.
 4. Puertos libres en tu máquina:
-	- 502 (Modbus TCP)
-	- 1883 (MQTT)
-	- 3000 (Grafana)
-	- 8080 (OpenPLC Web)
-	- 8086 (InfluxDB)
+    - 502 (Modbus TCP)
+    - 1883 (MQTT)
+    - 3000 (Grafana)
+    - 8080 (OpenPLC Web)
+    - 8086 (InfluxDB)
 
 ### Verificar instalación en Windows (PowerShell)
 
@@ -92,10 +92,10 @@ Para salir de la vista de logs: Ctrl + C (no detiene los contenedores).
 
 ## 4. Cargar la lógica PLC en OpenPLC
 
-1. Abre OpenPLC Web: http://localhost:8080
+1. Abre OpenPLC Web: <http://localhost:8080>
 2. Inicia sesión (si tu imagen lo solicita).
 3. Importa el archivo:
-	- open-plc-scripts/prueba_conexion.st
+    - open-plc-scripts/prueba_conexion.st
 4. Compila y ejecuta el programa.
 
 Nota: el gateway escribe registros Modbus y lee bobinas de decisión desde OpenPLC para clasificar piezas.
@@ -104,7 +104,7 @@ Nota: el gateway escribe registros Modbus y lee bobinas de decisión desde OpenP
 
 1. Abre CoppeliaSim localmente.
 2. Carga la escena:
-	- simulacion-coppeliaslim/Simulacion.ttt
+    - simulacion-coppeliaslim/Simulacion.ttt
 3. Inicia la simulación (botón Play).
 
 Importante:
@@ -117,9 +117,9 @@ Importante:
 Confirma estos puntos:
 
 1. `docker compose ps` muestra todos los servicios en Up.
-2. OpenPLC responde en http://localhost:8080.
-3. InfluxDB responde en http://localhost:8086.
-4. Grafana responde en http://localhost:3000.
+2. OpenPLC responde en <http://localhost:8080>.
+3. InfluxDB responde en <http://localhost:8086>.
+4. Grafana responde en <http://localhost:3000>.
 5. En logs de python_gateway no hay errores críticos de conexión persistentes.
 6. Con CoppeliaSim en ejecución, el flujo de ciclo comienza (movimientos/reposo en logs).
 
@@ -127,7 +127,7 @@ Confirma estos puntos:
 
 ### InfluxDB (según docker-compose actual)
 
-- URL: http://localhost:8086
+- URL: <http://localhost:8086>
 - Usuario inicial: admin
 - Contraseña inicial: adminpassword
 - Organización: celda_org
@@ -135,7 +135,7 @@ Confirma estos puntos:
 
 ### Grafana
 
-- URL: http://localhost:3000
+- URL: <http://localhost:3000>
 - Usuario por defecto: admin
 - Contraseña por defecto: admin
 
