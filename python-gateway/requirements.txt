@@ -1,0 +1,6 @@
+coppeliasim-zmqremoteapi-client==2.0.4
+pymodbus==3.6.4
+paho-mqtt==1.6.1
+scipy==1.13.0
+numpy==1.26.4
+influxdb-client==1.43.0
