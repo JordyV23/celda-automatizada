@@ -8,13 +8,14 @@ import paho.mqtt.client as mqtt
 import random
 import time
 import traceback
+import os
 
 ZMQ_HOST = 'host.docker.internal' 
 PLC_HOST = 'openplc'
 MQTT_HOST = 'mosquitto'
 
 INFLUX_URL = "http://influxdb:8086"
-INFLUX_TOKEN = "-9_nL8KgtuINmtqGbXQ3172mnf22a2e8tHpCHX708xEs9T7z-VnzdEts1Hd9cNJJbFyEcLgn2UoatO1UQCxYkQ=="
+INFLUX_TOKEN = os.gentenv('INFLUX_TOKEN')
 INFLUX_ORG = "celda_org"
 INFLUX_BUCKET = "binning_data"
 
