@@ -15,7 +15,7 @@ PLC_HOST = 'openplc'
 MQTT_HOST = 'mosquitto'
 
 INFLUX_URL = "http://influxdb:8086"
-INFLUX_TOKEN = "rGzMpCA6VF_FHtFsQZGz-je-njQrtmP3NRTmB35M80wc8PrOJzWAqL40rCPNI01_xP8BjXXEhkUHZzojEpdFKA=="
+INFLUX_TOKEN = os.getenv('INFLUX_TOKEN')
 INFLUX_ORG = "celda_org"
 INFLUX_BUCKET = "binning_data"
 
@@ -23,12 +23,12 @@ def get_truncated_normal(mean, sd, low, upp):
     return truncnorm((low - mean) / sd, (upp - mean) / sd, loc=mean, scale=sd)
 
 def simulate_ate_test():
-    rds_gen = get_truncated_normal(mean=10.0, sd=1.5, low=7.0, upp=15.0)
-    vth_gen = get_truncated_normal(mean=3.0, sd=0.3, low=2.0, upp=4.0)
+    rds_gen = get_truncated_normal(mean=11.5, sd=2.5, low=7.0, upp=20.0)
+    vth_gen = get_truncated_normal(mean=2.6, sd=0.6, low=1.5, upp=4.5)
     return {
         "RDS_on": round(rds_gen.rvs(), 2),
         "V_th": round(vth_gen.rvs(), 2),
-        "I_DSS": round(random.uniform(0.1, 1.0), 3)
+        "I_DSS": round(random.uniform(0.1, 1.5), 3)
     }
 
 def main():
@@ -65,6 +65,8 @@ def main():
         wp_feeder = sim.getObject('/Waypoint_Feeder')
         wp_ate = sim.getObject('/Waypoint_ATE')
         wp_bina = sim.getObject('/Waypoint_BinA')
+        wp_binb = sim.getObject('/Waypoint_BinB') # NUEVO
+        wp_binc = sim.getObject('/Waypoint_BinC') # NUEVO
         wp_scrap = sim.getObject('/Waypoint_Scrap')
 
         def mover_robot(waypoint_handle):
@@ -110,19 +112,32 @@ def main():
                 # Leer la respuesta del PLC (Bobinas 11 a 14)
                 # %QX1.3 = Coil 11 (BinA), %QX1.6 = Coil 14 (Scrap)
                 respuesta_plc = plc_client.read_coils(11, 4)
-                
-                if respuesta_plc.bits[0]: # BinA es TRUE
-                    categoria_final = "Grado A"
-                    print("-> PLC DECIDE: GRADO A. Moviendo a bandeja.", flush=True)
-                    mover_robot(wp_bina)
-                elif respuesta_plc.bits[3]: # Scrap es TRUE
-                    categoria_final = "Scrap"
-                    print("-> PLC DECIDE: SCRAP. Descartando pieza.", flush=True)
-                    mover_robot(wp_scrap)
-                else:
-                    categoria_final = "No Clasificado"
-                    print("-> PLC DECIDE: Sin clasificar. Devolviendo a Reposo.", flush=True)
-                    mover_robot(wp_reposo)
+                                    
+                if not respuesta_plc.isError():
+                    if respuesta_plc.bits[0]: # Coil 11
+                        categoria_final = "Grado A"
+                        print("-> PLC DECIDE: GRADO A.", flush=True)
+                        mover_robot(wp_bina)
+                        
+                    elif respuesta_plc.bits[1]: # Coil 12
+                        categoria_final = "Grado B"
+                        print("-> PLC DECIDE: GRADO B.", flush=True)
+                        mover_robot(wp_binb)
+                        
+                    elif respuesta_plc.bits[2]: # Coil 13
+                        categoria_final = "Grado C"
+                        print("-> PLC DECIDE: GRADO C.", flush=True)
+                        mover_robot(wp_binc)
+                        
+                    elif respuesta_plc.bits[3]: # Coil 14
+                        categoria_final = "Scrap"
+                        print("-> PLC DECIDE: SCRAP.", flush=True)
+                        mover_robot(wp_scrap)
+                        
+                    else:
+                        categoria_final = "No Clasificado"
+                        print("-> PLC DECIDE: Sin clasificar.", flush=True)
+                        mover_robot(wp_reposo)
 
                 # NUEVO: Guardar métricas en InfluxDB
                 try:
