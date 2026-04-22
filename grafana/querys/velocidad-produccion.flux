@@ -1,0 +1,7 @@
+from(bucket: "binning_data")
+  |> range(start: -15m)
+  |> filter(fn: (r) => r["_measurement"] == "clasificacion_mosfet")
+  |> filter(fn: (r) => r["_field"] == "rds_on")
+  |> count()
+  |> map(fn: (r) => ({ r with _value: float(v: r._value) * 4.0 })) 
+  |> yield(name: "uph_estimado")

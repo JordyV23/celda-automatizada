@@ -15,7 +15,7 @@ PLC_HOST = 'openplc'
 MQTT_HOST = 'mosquitto'
 
 INFLUX_URL = "http://influxdb:8086"
-INFLUX_TOKEN = os.gentenv('INFLUX_TOKEN')
+INFLUX_TOKEN = "rGzMpCA6VF_FHtFsQZGz-je-njQrtmP3NRTmB35M80wc8PrOJzWAqL40rCPNI01_xP8BjXXEhkUHZzojEpdFKA=="
 INFLUX_ORG = "celda_org"
 INFLUX_BUCKET = "binning_data"
 

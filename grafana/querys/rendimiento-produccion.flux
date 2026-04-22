@@ -1,0 +1,7 @@
+from(bucket: "binning_data")
+  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+  |> filter(fn: (r) => r["_measurement"] == "clasificacion_mosfet")
+  |> filter(fn: (r) => r["_field"] == "rds_on") 
+  |> group(columns: ["categoria"])
+  |> count()
+  |> yield(name: "conteo")
