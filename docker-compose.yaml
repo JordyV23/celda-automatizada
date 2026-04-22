@@ -50,6 +50,8 @@ services:
     container_name: python_gateway
     extra_hosts:
       - "host.docker.internal:host-gateway" # Crucial para conectar con CoppeliaSim en Windows
+    environment:
+      - INFLUX_TOKEN=${INFLUX_TOKEN}
     depends_on:
       - openplc
       - mosquitto
