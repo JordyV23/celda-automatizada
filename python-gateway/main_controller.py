@@ -1,14 +1,18 @@
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 from pymodbus.client import ModbusTcpClient
 from scipy.stats import truncnorm
 import json
+import os
 import paho.mqtt.client as mqtt
 import random
 import time
 import traceback
-import os
+import uvicorn
+import threading
 
 ZMQ_HOST = 'host.docker.internal' 
 PLC_HOST = 'openplc'
@@ -18,6 +22,38 @@ INFLUX_URL = "http://influxdb:8086"
 INFLUX_TOKEN = os.getenv('INFLUX_TOKEN')
 INFLUX_ORG = "celda_org"
 INFLUX_BUCKET = "binning_data"
+
+estado_sistema = {"corriendo": True, "emergencia": False}
+
+app = FastAPI()
+
+app.add_middleware(
+       CORSMiddleware,
+       allow_origins=["*"], 
+       allow_credentials=False, # <--- EL SECRETO ESTÁ AQUÍ
+       allow_methods=["*"],
+       allow_headers=["*"],
+   )
+
+@app.get("/comando/{accion}")
+def recibir_comando(accion: str):
+    global estado_sistema
+    if accion == "pausa":
+        estado_sistema["corriendo"] = False
+        return {"status": "Sistema Pausado"}
+    elif accion == "play":
+        estado_sistema["corriendo"] = True
+        estado_sistema["emergencia"] = False
+        return {"status": "Sistema en Marcha"}
+    elif accion == "emergencia":
+        estado_sistema["emergencia"] = True
+        estado_sistema["corriendo"] = False
+        return {"status": "PARADA DE EMERGENCIA ACTIVADA"}
+    return {"status": "Comando desconocido"}
+
+def iniciar_api():
+    # Ejecuta el servidor API en el puerto 8000 dentro de Docker
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 def get_truncated_normal(mean, sd, low, upp):
     return truncnorm((low - mean) / sd, (upp - mean) / sd, loc=mean, scale=sd)
@@ -79,10 +115,27 @@ def main():
             
             time.sleep(1.5) # Tiempo simulado para que el brazo llegue físicamente
 
+
+        print("\n--- INICIANDO API SCADA (Puerto 8000) ---", flush=True)
+        hilo_api = threading.Thread(target=iniciar_api, daemon=True)
+        hilo_api.start()
+
+        
         print("\n--- INICIANDO BUCLE DE CONTROL Y MOVIMIENTO ---", flush=True)
         mover_robot(wp_reposo) # Iniciar en posición segura
 
         while True:
+            
+            if estado_sistema["emergencia"]:
+                print("!!! PARADA DE EMERGENCIA !!! Sistema bloqueado.", flush=True)
+                time.sleep(2)
+                continue # Evita que el código de abajo se ejecute
+            
+            if not estado_sistema["corriendo"]:
+                print("Sistema en pausa. Esperando orden desde Grafana...", flush=True)
+                time.sleep(2)
+                continue
+            
             # 1. Búsqueda de Pieza
             print("Moviendo a Feeder para recoger pieza...", flush=True)
             mover_robot(wp_feeder)

@@ -42,12 +42,16 @@ services:
       - "3000:3000"
     depends_on:
       - influxdb
+    environment:
+      - GF_PANELS_DISABLE_SANITIZE_HTML=true
     restart: unless-stopped
 
   # 5. Nuestro Script Integrador (Puente ZMQ-Modbus)
   python-gateway:
     build: ./python-gateway
     container_name: python_gateway
+    ports:
+      - "8000:8000"
     extra_hosts:
       - "host.docker.internal:host-gateway" # Crucial para conectar con CoppeliaSim en Windows
     environment:
