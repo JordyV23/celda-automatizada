@@ -153,9 +153,14 @@ def main():
                 rds_modbus = int(mosfet_data["RDS_on"] * 100)
                 vth_modbus = int(mosfet_data["V_th"] * 100)
                 
-                # Escribir registros al PLC
-                plc_client.write_register(0, rds_modbus)
-                plc_client.write_register(1, vth_modbus)
+                # I_DSS para Modbus
+                idss_modbus = int(mosfet_data["I_DSS"] * 100)
+                
+                # Escribir registros al PLC en las NUEVAS direcciones seguras
+                plc_client.write_register(10, rds_modbus) # Dirección 10
+                plc_client.write_register(11, vth_modbus) # Dirección 11
+                plc_client.write_register(12, idss_modbus) # Dirección 12
+                
                 plc_client.write_coil(3, True) # Simular Sensor_ATE ON
                 
                 # Publicar en MQTT
