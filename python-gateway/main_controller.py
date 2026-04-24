@@ -140,6 +140,9 @@ def main():
             print("Moviendo a Feeder para recoger pieza...", flush=True)
             mover_robot(wp_feeder)
             
+            sim.setInt32Signal('suctionPad_active', 1)
+            time.sleep(0.5) # Breve pausa para que el motor físico asegure el agarre
+            
             # 2. Mover a ATE
             print("Moviendo a estación ATE...", flush=True)
             mover_robot(wp_ate)
@@ -192,7 +195,7 @@ def main():
                         print("-> PLC DECIDE: Sin clasificar.", flush=True)
                         mover_robot(wp_reposo)
 
-                # NUEVO: Guardar métricas en InfluxDB
+                # Guardar métricas en InfluxDB
                 try:
                     client_influx = InfluxDBClient(url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG)
                     write_api = client_influx.write_api(write_options=SYNCHRONOUS)
@@ -209,6 +212,19 @@ def main():
                 except Exception as db_err:
                     print(f"Error al guardar en BD: {db_err}", flush=True)
                 
+                sim.setInt32Signal('suctionPad_active', 0)
+                
+                # 2. LA CLAVE: Esperar a que el simulador "lea" el 0 y desenganche la física
+                time.sleep(1) 
+                
+                # 3. MOVER EL BRAZO VERTICALMENTE HACIA ARRIBA (Z-Clearance)
+                print("Subiendo brazo para alejarse de la pieza...", flush=True)
+                pos_actual = sim.getObjectPosition(robot_target, sim.handle_world)
+                pos_actual[2] += 0.15 # Sube 15 centímetros en el eje Z
+                sim.setObjectPosition(robot_target, sim.handle_world, pos_actual)
+                
+                # 4. Darle tiempo al brazo para subir físicamente
+                time.sleep(1.0)
                 # Limpiar sensor ATE
                 plc_client.write_coil(3, False)
             
