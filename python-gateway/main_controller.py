@@ -127,14 +127,21 @@ def main():
         while True:
             
             if estado_sistema["emergencia"]:
+                sim.setInt32Signal('spawner_active', 0)
+                sim.setInt32Signal('bandas_activas', 0)
                 print("!!! PARADA DE EMERGENCIA !!! Sistema bloqueado.", flush=True)
                 time.sleep(2)
                 continue # Evita que el código de abajo se ejecute
             
             if not estado_sistema["corriendo"]:
+                sim.setInt32Signal('spawner_active', 0)
+                sim.setInt32Signal('bandas_activas', 0)
                 print("Sistema en pausa. Esperando orden desde Grafana...", flush=True)
                 time.sleep(2)
                 continue
+            
+            sim.setInt32Signal('spawner_active', 1)
+            sim.setInt32Signal('bandas_activas', 1)
             
             # 1. Búsqueda de Pieza
             print("Moviendo a Feeder para recoger pieza...", flush=True)
